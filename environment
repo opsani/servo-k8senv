@@ -46,7 +46,6 @@ def run():
     if des_mode is None:
         raise Exception('Failed to read environment input descriptor, no control.environment.mode value was provided ')
     
-    # core_client = kubernetes.client.CoreV1Api()
     d, ns = config['deployment_name'], config.get('namespace', 'default')
     apps_client = kubernetes.client.AppsV1Api()
     tgt_dep = apps_client.read_namespaced_deployment(d, ns)
@@ -58,7 +57,10 @@ def run():
         print('{“status”:”ok”}')
         return
     
-    apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'] , des_mode))
+    # Only patch if desired isn't there yet. May have multiple 'environment-mismatch' failure cycles before the environment finishes updating
+    if tgt_dep.metadata.annotations.get(config['desired_mode_annotation']) != des_mode:
+        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'], des_mode))
+
     time.sleep(config.get('sleep_delay', 121))
 
     print('{“status”:”environment-mismatch”}')
