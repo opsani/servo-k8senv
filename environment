@@ -10,7 +10,7 @@ import yaml
 config_path = os.environ.get('OPTUNE_CONFIG', './config.yaml')
 
 
-def patch_annotation_str(annoation, value):
+def patch_annotation_dict(annoation, value):
     return {
         'apiVersion': 'apps/v1',
         'kind': 'Deployment',
@@ -55,7 +55,7 @@ def run():
         raise Exception('Missing annotation or empty value {}: {}'.format(config['current_mode_annotation'], cur_mode))
 
     if cur_mode != des_mode:
-        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_str(config['desired_mode_annotation'] , des_mode))
+        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'] , des_mode))
         time.sleep(config.get('sleep_delay', 120))
 
     print('{“status”:”ok”}')
