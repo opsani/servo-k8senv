@@ -1,0 +1,6 @@
+k8senv:
+  namespace: default # optional
+  deployment_name: AAA # required
+  current_mode_annotation: BBB # required
+  desired_mode_annotation: CCC # required
+  sleep_delay: 120 # optional

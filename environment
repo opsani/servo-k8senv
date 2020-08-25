@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+
+import json
+import kubernetes
+import os
+import sys
+import time
+import yaml
+
+config_path = os.environ.get('OPTUNE_CONFIG', './config.yaml')
+
+
+def patch_annotation_str(annoation, value):
+    return {
+        'apiVersion': 'apps/v1',
+        'kind': 'Deployment',
+        'metadata': {
+            'annotations': { annoation: value }
+        }
+    }
+
+def run():
+    if os.getenv('KUBERNETES_SERVICE_HOST'): # If running in a kubernetes cluster
+        kubernetes.config.load_incluster_config()
+    else:
+        kubernetes.config.load_kube_config()
+
+    try:
+        config = yaml.safe_load(open(config_path))
+    except yaml.YAMLError as e:
+        raise Exception('Could not parse config file located at "{}". '
+                        'Please check its contents. Error: {}'.format(config_path, str(e)))
+
+    err_preamble = 'Configuration error in {}:'.format(config_path)
+    assert config.get('deployment_name'), '{} deployment_name is required'.format(err_preamble)
+    assert config.get('current_mode_annotation'), '{} current_mode_annotation is required'.format(err_preamble)
+    assert config.get('desired_mode_annotation'), '{} desired_mode_annotation is required'.format(err_preamble)
+
+    # Load input
+    try:
+        input_data = json.loads(sys.stdin.read())
+    except json.decoder.JSONDecodeError as e:
+        raise Exception('Failed to read environment input descriptor on stdin') from e
+
+    des_mode = input_data.get('control', {}).get('environment', {}).get('mode')
+    if des_mode is None:
+        raise Exception('Failed to read environment input descriptor, no control.environment.mode value was provided ')
+    
+    # core_client = kubernetes.client.CoreV1Api()
+    d, ns = config['deployment_name'], config.get('namespace', 'default')
+    apps_client = kubernetes.client.AppsV1Api()
+    tgt_dep = apps_client.read_namespaced_deployment(d, ns)
+    cur_mode = tgt_dep.metadata.annotations.get(config['current_mode_annotation'])
+    if cur_mode in [None, '']:
+        raise Exception('Missing annotation or empty value {}: {}'.format(config['current_mode_annotation'], cur_mode))
+
+    if cur_mode != des_mode:
+        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_str(config['desired_mode_annotation'] , des_mode))
+        time.sleep(config.get('sleep_delay', 120))
+
+    print('{“status”:”ok”}')
+
+if __name__ == '__main__':
+    run()
