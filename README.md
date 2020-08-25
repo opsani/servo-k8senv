@@ -11,3 +11,14 @@ When invoked, servo-k8senv:
     2. Otherwise, set the annotation desired_mode_annotation (from config) of k8s deployment deployment_name (specified in config) to the value of control.environment.mode. Failure to set the annotation will cause an error.
 
 On successful update of the annotation, servo-k8senv will sleep for sleep_delay (value specified in config) seconds and return
+
+## Configuration Format
+
+```yaml
+k8senv:
+  deployment_name: AAA # required
+  namespace: default # optional
+  current_mode_annotation: BBB # required
+  desired_mode_annotation: CCC # required
+  sleep_delay: 120 # optional
+```

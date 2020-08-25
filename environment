@@ -35,6 +35,8 @@ def run():
     assert config.get('deployment_name'), '{} deployment_name is required'.format(err_preamble)
     assert config.get('current_mode_annotation'), '{} current_mode_annotation is required'.format(err_preamble)
     assert config.get('desired_mode_annotation'), '{} desired_mode_annotation is required'.format(err_preamble)
+    assert isinstance(config.get('sleep_delay', 121), (int, float)) and config.get('sleep_delay', 121) > 0 \
+        , '{} sleep_delay must be a number greater than 0'.format(err_preamble)
 
     # Load input
     try:
@@ -54,7 +56,7 @@ def run():
         raise Exception('Missing annotation or empty value {}: {}'.format(config['current_mode_annotation'], cur_mode))
 
     if cur_mode == des_mode:
-        print('{“status”:”ok”}')
+        print('{"status":"ok"}')
         return
     
     # Only patch if desired isn't there yet. May have multiple 'environment-mismatch' failure cycles before the environment finishes updating
