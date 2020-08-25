@@ -54,11 +54,14 @@ def run():
     if cur_mode in [None, '']:
         raise Exception('Missing annotation or empty value {}: {}'.format(config['current_mode_annotation'], cur_mode))
 
-    if cur_mode != des_mode:
-        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'] , des_mode))
-        time.sleep(config.get('sleep_delay', 120))
+    if cur_mode == des_mode:
+        print('{“status”:”ok”}')
+        return
+    
+    apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'] , des_mode))
+    time.sleep(config.get('sleep_delay', 121))
 
-    print('{“status”:”ok”}')
+    print('{“status”:”environment-mismatch”}')
 
 if __name__ == '__main__':
     run()
