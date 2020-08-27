@@ -35,22 +35,19 @@ data:
       namespace: app2
       application:
         components:
-          web-main/main:
+          web-main:
             settings:
               replicas:
                 min: 1
                 max: 3
-                pinned: False
               cpu:
                 min: 0.125
                 max: 1.0
                 step: 0.125
-                pinned: False
               mem:
                 min: 0.125
                 max: 2.0
                 step: 0.125
-                pinned: False
             env:
               COMMIT_DELAY:
                 type: range
@@ -58,16 +55,12 @@ data:
                 max: 100
                 step: 1
                 default: 20
-                pinned: False
     prom:
       prometheus_endpoint: http://prometheus.opsani-monitoring.svc:9090
       metrics:
-        main_request_rate:
-          query: sum(rate(envoy_cluster_upstream_rq_total{opsani_role="",app="web",role="main"}[1m]))
-          unit: rpm
-        canary_request_rate:
-          query: sum(rate(envoy_cluster_upstream_rq_total{opsani_role="tuning",app="web",role="main"}[1m]))
-          unit: rpm
+        main_request_rate: 
+          query: sum(rate(envoy_cluster_upstream_rq_total{app="web",role="main"}[1m]))
+          unit: rps
 ---
 apiVersion: apps/v1
 kind: Deployment
