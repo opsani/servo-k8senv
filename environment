@@ -32,6 +32,9 @@ def run():
                         'Please check its contents. Error: {}'.format(config_path, str(e)))
 
     err_preamble = 'Configuration error in {}:'.format(config_path)
+    assert config.get('k8senv'), '{} k8senv deployment configuration section not found'.format(err_preamble)
+    config = config['k8senv']
+
     assert config.get('deployment_name'), '{} deployment_name is required'.format(err_preamble)
     assert config.get('current_mode_annotation'), '{} current_mode_annotation is required'.format(err_preamble)
     assert config.get('desired_mode_annotation'), '{} desired_mode_annotation is required'.format(err_preamble)
@@ -65,7 +68,7 @@ def run():
 
     time.sleep(config.get('sleep_delay', 121))
 
-    print('{“status”:”environment-mismatch”}')
+    print('{"status":"environment-mismatch"}')
 
 if __name__ == '__main__':
     run()

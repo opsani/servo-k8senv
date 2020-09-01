@@ -22,3 +22,27 @@ k8senv:
   desired_mode_annotation: CCC # required
   sleep_delay: 120 # optional
 ```
+
+## Running the tests
+
+The tests are meant to be run by `pytest`. The Python3 version is required, it can be installed with
+the OS package manager (see example setup below) or with `python3 -m pip install pytest`.
+
+To run the tests, get a copy of the opsani/servo-k8senv repo on a host that has `minikube` installed
+and running (`minikube start`). There should be no deployments in the default namespace (verify this by running
+`kubectl get deployment`).
+
+Example setup:
+
+```bash
+# this setup assumes Ubuntu 18.4, for earlier versions, please install pip and pytest for Python3 manually, start from
+# `https://pip.pypa.io/en/stable/installing/` for setting up pip.
+sudo apt-get install -y python3-pytest
+
+git clone git clone git@github.com:opsani/servo-k8senv
+cd ~/servo-k8senv/test
+ln -s ../environment ./environment.py # symlink and rename to allow test suite to import as module
+
+# run the tests
+python3 -m pytest
+```

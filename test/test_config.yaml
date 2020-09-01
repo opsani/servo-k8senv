@@ -1,0 +1,5 @@
+k8senv:
+  deployment_name: web-main
+  current_mode_annotation: opsani-current-mode
+  desired_mode_annotation: opsani-desired-mode
+  sleep_delay: 10
