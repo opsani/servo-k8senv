@@ -1,5 +1,8 @@
 k8senv:
-  deployment_name: web-main
-  current_mode_annotation: opsani-current-mode
-  desired_mode_annotation: opsani-desired-mode
+  current_mode_deployment_name: web-canary # required
+  current_mode_namespace: default # required
+  current_mode_annotation: opsani-current-mode # required
+  desired_mode_deployment_name: web-main # required
+  desired_mode_namespace: opsani # required 
+  desired_mode_annotation: opsani-desired-mode # required
   sleep_delay: 10
