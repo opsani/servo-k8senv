@@ -8,6 +8,7 @@ import time
 import yaml
 
 config_path = os.environ.get('OPTUNE_CONFIG', './config.yaml')
+REQUIRED_CONFIG = [ 'current_mode_deployment_name', 'current_mode_namespace', 'current_mode_annotation', 'desired_mode_deployment_name', 'desired_mode_namespace', 'desired_mode_annotation']
 
 
 def patch_annotation_dict(annoation, value):
@@ -35,11 +36,12 @@ def run():
     assert config.get('k8senv'), '{} k8senv deployment configuration section not found'.format(err_preamble)
     config = config['k8senv']
 
-    assert config.get('deployment_name'), '{} deployment_name is required'.format(err_preamble)
-    assert config.get('current_mode_annotation'), '{} current_mode_annotation is required'.format(err_preamble)
-    assert config.get('desired_mode_annotation'), '{} desired_mode_annotation is required'.format(err_preamble)
+    
+    for cfg_itm in REQUIRED_CONFIG:
+        assert config.get(cfg_itm), '{} {} is required in k8senv configuration'.format(err_preamble, cfg_itm)
+
     assert isinstance(config.get('sleep_delay', 121), (int, float)) and config.get('sleep_delay', 121) > 0 \
-        , '{} sleep_delay must be a number greater than 0'.format(err_preamble)
+        , '{} k8senv sleep_delay must be a number greater than 0'.format(err_preamble)
 
     # Load input
     try:
@@ -51,9 +53,8 @@ def run():
     if des_mode is None:
         raise Exception('Failed to read environment input descriptor, no control.environment.mode value was provided ')
     
-    d, ns = config['deployment_name'], config.get('namespace', 'default')
     apps_client = kubernetes.client.AppsV1Api()
-    tgt_dep = apps_client.read_namespaced_deployment(d, ns)
+    tgt_dep = apps_client.read_namespaced_deployment(config['current_mode_deployment_name'], config['current_mode_namespace'])
     cur_mode = tgt_dep.metadata.annotations.get(config['current_mode_annotation'])
     if cur_mode in [None, '']:
         raise Exception('Missing annotation or empty value {}: {}'.format(config['current_mode_annotation'], cur_mode))
@@ -63,8 +64,13 @@ def run():
         return
     
     # Only patch if desired isn't there yet. May have multiple 'environment-mismatch' failure cycles before the environment finishes updating
-    if tgt_dep.metadata.annotations.get(config['desired_mode_annotation']) != des_mode:
-        apps_client.patch_namespaced_deployment(d, ns, body=patch_annotation_dict(config['desired_mode_annotation'], des_mode))
+    des_dep = apps_client.read_namespaced_deployment(config['desired_mode_deployment_name'], config['desired_mode_namespace'])
+    if des_dep.metadata.annotations.get(config['desired_mode_annotation']) != des_mode:
+        apps_client.patch_namespaced_deployment(
+            config['desired_mode_deployment_name'], 
+            config['desired_mode_namespace'], 
+            body=patch_annotation_dict(config['desired_mode_annotation'], des_mode)
+        )
 
     time.sleep(config.get('sleep_delay', 121))
 

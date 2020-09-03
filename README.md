@@ -16,11 +16,13 @@ On successful update of the annotation, servo-k8senv will sleep for sleep_delay 
 
 ```yaml
 k8senv:
-  deployment_name: AAA # required
-  namespace: default # optional
-  current_mode_annotation: BBB # required
-  desired_mode_annotation: CCC # required
-  sleep_delay: 120 # optional
+  current_mode_deployment_name: web-canary # required
+  current_mode_namespace: default # required
+  current_mode_annotation: opsani-current-mode # required
+  desired_mode_deployment_name: web-main # required
+  desired_mode_namespace: opsani # required 
+  desired_mode_annotation: opsani-desired-mode # required
+  sleep_delay: 120 # optional,default 120
 ```
 
 ## Running the tests
